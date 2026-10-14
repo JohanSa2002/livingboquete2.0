@@ -1,0 +1,476 @@
+/* ============================================================
+   DESIGN TOKENS
+   A single source of truth for the Living Boquete rental
+   platform. Every new component pulls from here so the product
+   reads as one system instead of a pile of one-off pages.
+   ============================================================ */
+:root {
+  /* Color — inspired by the highlands: forest canopy, roasted
+     coffee, sun-bleached sand. Kept desaturated on purpose so it
+     reads premium rather than "travel brochure". */
+  --color-forest: #2F5233;
+  --color-forest-dark: #223D26;
+  --color-leaf: #5D8A5A;
+  --color-sand: #F5F0E8;
+  --color-sand-deep: #EDE5D4;
+  --color-coffee: #8B5E3C;
+  --color-wood: #915F3B;
+  /* Ink — one warm family only (brown-black, never neutral gray) so text,
+     borders and shadows all share the hue of the sand ground. */
+  --color-ink: #251D14;
+  --color-ink-mid: #3D3328;
+  --color-ink-soft: #5A4F42;
+  --color-ink-faint: #6C6659;
+  --color-white: #FFFFFF;
+  --color-cream: #F7F1E6;
+  --color-sand-muted: #D8CDBA;
+  /* Accents — terracotta for links/labels, gold for the dark-ground eyebrows
+     and heading italics, moss for buttons that sit inside forest sections. */
+  --color-terracotta: #8E4A2A;
+  --color-gold: #C8964A;
+  --color-gold-light: #E6B87C;
+  --color-gold-pale: #E8D9B8;
+  --color-moss: #2C3A2A;
+  --color-border: rgba(37,29,20,.12);
+  --color-border-soft: rgba(37,29,20,.08);
+
+  /* Type */
+  --font-display: 'Manrope', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-accent: 'Spectral', Georgia, serif;
+
+  --text-hero: clamp(38px, 5.4vw, 64px);
+  --text-h2: clamp(28px, 3.4vw, 40px);
+  --text-h3: 24px;
+  --text-body: 16px;
+  --text-meta: 14px;
+  --text-badge: 12px;
+
+  /* Spacing scale (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+
+  /* Shadow — soft and warm, never pure black */
+  --shadow-sm: 0 1px 2px rgba(37,29,20,.06);
+  --shadow-md: 0 12px 28px -16px rgba(37,29,20,.28);
+  --shadow-lg: 0 24px 48px -20px rgba(37,29,20,.32);
+  --shadow-focus: 0 0 0 3px rgba(93,138,90,.45);
+
+  --ease-out: cubic-bezier(.2,.7,.2,1);
+  --ease-out-strong: cubic-bezier(.23,1,.32,1);
+  --ease-drawer: cubic-bezier(.32,.72,0,1);
+
+  /* Glass — only ever used over photography (hero, guarantees, events,
+     guide form) where there is something alive to refract. Over the flat
+     sand ground a blur has nothing to show, so it isn't used there. */
+  --glass-blur: blur(16px) saturate(150%);
+  --glass-dark-bg: rgba(18, 24, 16, .34);
+  --glass-dark-border: rgba(255, 255, 255, .2);
+  --glass-light-bg: rgba(247, 241, 230, .7);
+  --glass-light-border: rgba(255, 255, 255, .55);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, .28);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Guards against phantom horizontal scroll: the off-screen mobile drawer
+   (translateX(100%) when closed) and the slide-left/slide-right scroll-reveal
+   transforms (±72px before a section reveals) both extend past the viewport
+   edge on narrow screens with nothing to clip them otherwise.
+   overflow-x:hidden goes on <html> only, not <body> — on body it makes body
+   itself a scroll container, which desyncs position:sticky (the header)
+   from the real viewport scroll and breaks it entirely. */
+html { scroll-behavior: smooth; overflow-x: hidden; }
+
+/* Nuxt view transitions: a brief, soft dissolve keeps navigation feeling
+   continuous without competing with property photography or page content. */
+::view-transition-old(root) {
+  animation: route-out .22s cubic-bezier(.4, 0, 1, 1) both;
+}
+::view-transition-new(root) {
+  animation: route-in .42s var(--ease-out) both;
+}
+@keyframes route-out {
+  to { opacity: 0; transform: translateY(-5px); filter: blur(1px); }
+}
+@keyframes route-in {
+  from { opacity: 0; transform: translateY(10px); filter: blur(2px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
+
+body {
+  margin: 0;
+  background: var(--color-sand);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: var(--color-forest); color: var(--color-sand); }
+
+img { display: block; max-width: 100%; }
+
+input, textarea, select, button { font-family: inherit; }
+
+a { color: inherit; }
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  border-radius: var(--radius-sm);
+}
+/* The skip-link target is focused programmatically, not by keyboard — no ring. */
+main:focus { outline: none; box-shadow: none; }
+
+/* ============================================================
+   REUSABLE COMPONENTS
+   ============================================================ */
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-body);
+  line-height: 1;
+  padding: 15px 26px;
+  border-radius: var(--radius-pill);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform .18s var(--ease-out), box-shadow .18s var(--ease-out), background-color .18s var(--ease-out);
+  white-space: nowrap;
+}
+.btn:active { transform: scale(.97); transition-duration: .1s; }
+
+.btn-primary {
+  background: var(--color-forest);
+  color: var(--color-sand);
+  box-shadow: 0 14px 30px -12px rgba(47,82,51,.55);
+}
+.btn-primary:hover { background: var(--color-forest-dark); box-shadow: 0 18px 36px -14px rgba(47,82,51,.65); }
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover { transform: translateY(-1px); }
+}
+
+.btn-ghost {
+  background: rgba(255,255,255,.12);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,.5);
+  color: var(--color-white);
+}
+.btn-ghost:hover { background: rgba(255,255,255,.2); transform: translateY(-1px); }
+
+.btn-secondary {
+  background: var(--color-white);
+  color: var(--color-forest);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+.btn-secondary:hover { border-color: var(--color-forest); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+/* Chips (filters) */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 13.5px;
+  padding: 9px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: background-color .16s var(--ease-out), color .16s var(--ease-out), border-color .16s var(--ease-out), transform .16s var(--ease-out);
+}
+.chip:hover { border-color: var(--color-leaf); transform: translateY(-1px); }
+.chip:active { transform: scale(.96); }
+.chip.is-active {
+  background: var(--color-forest);
+  border-color: var(--color-forest);
+  color: var(--color-sand);
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--text-badge);
+  letter-spacing: .02em;
+  padding: 6px 11px;
+  border-radius: var(--radius-pill);
+  line-height: 1;
+}
+.badge-dark { background: rgba(34,28,19,.6); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); color: var(--color-white); }
+.badge-light { background: var(--color-white); color: var(--color-ink); box-shadow: var(--shadow-sm); }
+.badge-forest { background: var(--color-forest); color: var(--color-sand); }
+.badge-wood { background: var(--color-wood); color: var(--color-white); }
+
+/* Cards */
+.card {
+  background: var(--color-white);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Underlined text link — the tertiary action next to a section heading
+   ("See all →"). The gold rule thickens and the text shifts to forest on
+   hover so the affordance is visible without a button. */
+.link-underline {
+  display: inline-block;
+  color: var(--color-moss);
+  font-weight: 700;
+  text-decoration: none;
+  padding-bottom: 3px;
+  white-space: nowrap;
+  background-image: linear-gradient(var(--color-gold), var(--color-gold));
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 100% 2px;
+  transition: color .2s ease, background-size .25s var(--ease-out);
+}
+.link-underline:hover { color: var(--color-forest); background-size: 100% 3px; }
+
+/* Section eyebrow label */
+.eyebrow {
+  font-family: var(--font-body);
+  font-size: var(--text-badge);
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--color-coffee);
+}
+
+/* Shared utility (used by mobile overlays/drawers across components) */
+.hidden { display: none !important; }
+
+/* Skip link — keyboard users jump straight past the header. Off-screen until
+   focused; then it drops in as a solid forest pill above everything. */
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 200;
+  padding: 12px 18px;
+  border-radius: var(--radius-pill);
+  background: var(--color-forest);
+  color: var(--color-sand);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  transform: translateY(-160%);
+  opacity: 0;
+  transition: transform .2s var(--ease-out), opacity .2s ease;
+}
+.skip-link:focus-visible {
+  transform: translateY(0);
+  opacity: 1;
+  box-shadow: var(--shadow-lg), var(--shadow-focus);
+}
+
+/* Inline form error — replaces window.alert(). Sits directly above the submit
+   button so the message lands where the eye already is. */
+.form-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(192,57,43,.35);
+  background: rgba(192,57,43,.07);
+  color: #8C2A1E;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.form-error > svg { flex: none; margin-top: 1px; }
+
+/* Grain — a fixed-size noise tile at very low opacity breaks the flat digital
+   look of the dark forest sections. Pure texture: no layout, no pointer. */
+.grain { position: relative; isolation: isolate; }
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: .07;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+/* Numbers that get compared at a glance (prices, ratings, counts) line up
+   column-wise instead of jittering by digit width. */
+.num { font-variant-numeric: tabular-nums; }
+
+/* Animations */
+@keyframes slowzoom {
+  from { transform: scale(1.08); }
+  to   { transform: scale(1); }
+}
+@keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes drawerIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+/* ─── Scroll Reveal ────────────────────────────────────────────────────────
+   [data-reveal] is added by JS only to individual headings/subtitles.
+   .rv / .rv-once on <section> elements are NOT given transform so they
+   never create compositor layers that break position:sticky on the header.
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* JS-controlled reveal: only for individual title/eyebrow/subtitle elements.
+   transform + opacity + filter only — all compositor-friendly, no layout
+   properties, so revealing never triggers a reflow. */
+[data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 35px, 0);
+  /* No filter: blur and no will-change — an animated blur repaints every
+     heading on every frame, and a permanent will-change kept a GPU layer
+     alive for every not-yet-revealed element on the page. Opacity/transform
+     transitions get promoted on their own while they run. */
+  transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Alternating horizontal reveal for section intros. Same engine (still just
+   individual heading/label/paragraph elements, never the <section> itself —
+   see note above), sideways motion instead of vertical so consecutive
+   sections can alternate left/right. */
+[data-reveal="slide-left"] { transform: translate3d(-72px, 0, 0); }
+[data-reveal="slide-right"] { transform: translate3d(72px, 0, 0); }
+
+[data-reveal].is-revealed {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+/* Stagger delays */
+[data-reveal-delay="100"] { transition-delay: 0.1s; }
+[data-reveal-delay="120"] { transition-delay: 0.12s; }
+[data-reveal-delay="150"] { transition-delay: 0.15s; }
+[data-reveal-delay="200"] { transition-delay: 0.2s; }
+[data-reveal-delay="240"] { transition-delay: 0.24s; }
+[data-reveal-delay="300"] { transition-delay: 0.3s; }
+[data-reveal-delay="360"] { transition-delay: 0.36s; }
+
+/* Layout helpers */
+.pad-sec { padding-left: 26px; padding-right: 26px; }
+
+/* Language */
+[data-lang="en"] .lang-es { display: none !important; }
+[data-lang="en"] .lang-en { display: inline !important; }
+[data-lang="es"] .lang-en { display: none !important; }
+[data-lang="en"] select.lang-en,
+[data-lang="es"] select.lang-es { display: block !important; }
+
+/* Stable-width language pairs: reserves space for the wider translation so
+   nav links and buttons don't visibly resize when the language is toggled. */
+.lang-stable { display: inline-grid; }
+[data-lang] .lang-stable > .lang-es,
+[data-lang] .lang-stable > .lang-en {
+  display: inline-block !important;
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+[data-lang="en"] .lang-stable > .lang-es { visibility: hidden; }
+[data-lang="es"] .lang-stable > .lang-en { visibility: hidden; }
+
+/* Responsive */
+@media (max-width: 880px) {
+  .desktop-nav { display: none !important; }
+  .desktop-lang-toggle { display: none !important; }
+  .mobile-burger { display: flex !important; }
+  .footer-grid { grid-template-columns: 1fr 1fr !important; gap: 30px !important; }
+  .hero-h1 { font-size: clamp(64px, 20vw, 120px) !important; }
+  .split-2 { grid-template-columns: 1fr !important; }
+  .cols-3, .cols-2 { grid-template-columns: 1fr !important; }
+  .gal-grid { grid-template-columns: 1fr 1fr !important; }
+  .pad-sec { padding-left: 20px !important; padding-right: 20px !important; }
+  .filters-sidebar { display: none !important; }
+  .filters-mobile-bar { display: flex !important; }
+  .hero-stats { gap: 28px !important; }
+}
+@media (max-width: 560px) {
+  .footer-grid { grid-template-columns: 1fr !important; }
+  .gal-grid { grid-template-columns: 1fr !important; }
+  .ev-row { flex-direction: column !important; align-items: flex-start !important; }
+  .hero-stats { flex-wrap: nowrap !important; gap: 8px !important; padding: 18px 10px !important; }
+  .hero-stat { flex: 1; min-width: 0; }
+  .hero-stat-num { font-size: clamp(17px, 5.6vw, 24px) !important; gap: 3px !important; }
+  .hero-stat-label { font-size: 11px !important; line-height: 1.25; }
+  .hero-stat-divider { height: 28px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+  /* [data-reveal] (scroll-reveal fade/slide) is exempt on purpose — the
+     site owner wants that sequence to always play, reduced-motion or not. */
+}
+
+/* ============================================================
+   GLASS SURFACES
+   .glass-dark — light text over a photo (hero panel, guarantees,
+   event cards). .glass-light — dark text over a photo (guide form).
+   The top inset highlight is what sells the pane's edge; the drop
+   shadow stays short so it reads as lift, not a glow.
+   ============================================================ */
+.glass-dark,
+.glass-light {
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+.glass-dark {
+  background: var(--glass-dark-bg);
+  border: 1px solid var(--glass-dark-border);
+  box-shadow: var(--glass-highlight), 0 10px 24px -14px rgba(8, 12, 7, .5);
+  color: var(--color-cream);
+}
+.glass-light {
+  background: var(--glass-light-bg);
+  border: 1px solid var(--glass-light-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), 0 10px 24px -14px rgba(8, 12, 7, .45);
+  color: var(--color-ink);
+}
+/* No backdrop-filter support, or the visitor asked for less transparency:
+   fall back to near-opaque panes so text contrast never depends on blur. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-dark { background: rgba(22, 30, 20, .86); }
+  .glass-light { background: rgba(247, 241, 230, .95); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass-dark { background: rgba(22, 30, 20, .9); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .glass-light { background: var(--color-cream); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
